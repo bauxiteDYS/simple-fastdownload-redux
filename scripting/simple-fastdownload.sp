@@ -11,11 +11,11 @@
 
 public Plugin myinfo = 
 {
-	name = "simple-fastdownload",
-	author = "domino_",
-	description = "fastdownload support without webhosting",
+	name = "simple-fastdownload-redux",
+	author = "domino_, Alienmario",
+	description = "Fastdownload support without webhosting",
 	version = "2.0.0",
-	url = "https://github.com/neko-pm/simple-fastdownload"
+	url = "https://github.com/Alienmario/simple-fastdownload-redux"
 };
 
 //------------------------------------------------------
@@ -57,7 +57,7 @@ public void OnPluginStart()
 	ConVar sv_downloadurl_urlpath = CreateConVar("sv_downloadurl_urlpath", "fastdl", "path for fastdownload url eg: fastdl");
 	sv_downloadurl_urlpath.GetString(urlpath, sizeof(urlpath));
 	
-	if(!Web_RegisterRequestHandler(urlpath, OnWebRequest, urlpath, "https://github.com/neko-pm/simple-fastdownload"))
+	if (!Web_RegisterRequestHandler(urlpath, OnWebRequest, urlpath, "https://github.com/neko-pm/simple-fastdownload"))
 	{
 		SetFailState("Failed to register request handler.");
 	}
@@ -77,7 +77,7 @@ public void OnPluginStart()
 	sv_downloadurl_autoupdate.AddChangeHook(OnAutoUpdateChanged);
 
 	sv_downloadurl_hostname = CreateConVar("sv_downloadurl_hostname", "", "either an empty string, or hostname to use in downloadurl with no trailing slash eg: fastdownload.example.com");
-	if(sv_downloadurl_autoupdate.BoolValue)
+	if (sv_downloadurl_autoupdate.BoolValue)
 	{
 		sv_downloadurl_hostname.AddChangeHook(OnHostnameChanged);
 		
@@ -184,7 +184,7 @@ public void Timer_AddFilesFallback(Handle timer)
 
 public Action FastDownloadListFiles(int client, int args)
 {
-	if(client == 0)
+	if (client == 0)
 	{
 		StringMapSnapshot snapshot = downloadable_files.Snapshot();
 		int length = snapshot.Length;
@@ -192,7 +192,7 @@ public Action FastDownloadListFiles(int client, int args)
 		ArrayList array = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 		
 		char path[PLATFORM_MAX_PATH], filepath[PLATFORM_MAX_PATH];
-		for(int index = 0, path_index; index < length; index++)
+		for (int index = 0, path_index; index < length; index++)
 		{
 			snapshot.GetKey(index, filepath, sizeof(filepath));
 			downloadable_files.GetValue(filepath, path_index);
@@ -207,8 +207,8 @@ public Action FastDownloadListFiles(int client, int args)
 		
 		array.Sort(Sort_Ascending, Sort_String);
 		
-		PrintToServer("downloadable files:");
-		for(int index = 0; index < length; index++)
+		PrintToServer("Downloadable files:");
+		for (int index = 0; index < length; index++)
 		{
 			array.GetString(index, filepath, sizeof(filepath));
 			PrintToServer("  %s", filepath);
@@ -226,7 +226,7 @@ public Action FastDownloadListFiles(int client, int args)
 
 public void OnDownloadUrlChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if(sv_downloadurl_autoupdate.BoolValue)
+	if (sv_downloadurl_autoupdate.BoolValue)
 	{
 		char hostname[PLATFORM_MAX_PATH];
 		sv_downloadurl_hostname.GetString(hostname, sizeof(hostname));
@@ -237,7 +237,7 @@ public void OnDownloadUrlChanged(ConVar convar, const char[] oldValue, const cha
 
 public void OnAutoUpdateChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if(convar.BoolValue)
+	if (convar.BoolValue)
 	{
 		sv_downloadurl_hostname.AddChangeHook(OnHostnameChanged);
 		
@@ -355,17 +355,17 @@ void AddFilesToFileList()
 {
 	float start = GetEngineTime();
 	
-	if(sv_downloadurl_add_mapcycle.BoolValue)
+	if (sv_downloadurl_add_mapcycle.BoolValue)
 	{
 		ArrayList maplist = view_as<ArrayList>(ReadMapList());
 		
-		if(maplist != INVALID_HANDLE)
+		if (maplist != INVALID_HANDLE)
 		{
 			int length = maplist.Length;
 			
-			if(length > 0)
+			if (length > 0)
 			{
-				for(int index = 0; index < length; index++)
+				for (int index = 0; index < length; index++)
 				{
 					char mapname[PLATFORM_MAX_PATH];
 					maplist.GetString(index, mapname, sizeof(mapname));
@@ -381,19 +381,19 @@ void AddFilesToFileList()
 		}
 	}
 	
-	if(sv_downloadurl_add_downloadables.BoolValue)
+	if (sv_downloadurl_add_downloadables.BoolValue)
 	{
 		int downloadables = FindStringTable("downloadables");
 		int size = GetStringTableNumStrings(downloadables);
 		
-		for(int index = 0; index < size; index++)
+		for (int index = 0; index < size; index++)
 		{
 			char filepath[PLATFORM_MAX_PATH];
 			ReadStringTable(downloadables, index, filepath, sizeof(filepath));
 			
 			int length = GetStringTableDataLength(downloadables, index);
 			
-			if(length > 0)
+			if (length > 0)
 				continue;
 			
 			ReplaceString(filepath, sizeof(filepath), "\\", "/");
@@ -553,9 +553,9 @@ public bool OnWebRequest(WebConnection connection, const char[] method, const ch
 	int path_index;
  	bool is_downloadable = downloadable_files.GetValue(url[1], path_index);
 	
-	static char filepath[PLATFORM_MAX_PATH];
 	if (is_downloadable)
 	{
+		static char filepath[PLATFORM_MAX_PATH];
 		static char path[PLATFORM_MAX_PATH];
 		if (paths.GetString(path_index, path, sizeof(path)))
 		{
@@ -604,7 +604,7 @@ void SetFastDownloadUrl(const char[] hostname)
 {
 	char fastdownload_url[PLATFORM_MAX_PATH];
 	
-	if(hostname[0] == '\0')
+	if (hostname[0] == '\0')
 	{
 		int hostip = FindConVar("hostip").IntValue;
 		FormatEx(fastdownload_url, sizeof(fastdownload_url), "http://%d.%d.%d.%d:%d/%s",
