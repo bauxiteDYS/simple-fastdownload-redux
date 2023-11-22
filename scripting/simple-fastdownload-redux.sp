@@ -57,7 +57,7 @@ public void OnPluginStart()
 	ConVar sv_downloadurl_urlpath = CreateConVar("sv_downloadurl_urlpath", "fastdl", "path for fastdownload url eg: fastdl");
 	sv_downloadurl_urlpath.GetString(urlpath, sizeof(urlpath));
 	
-	if (!Web_RegisterRequestHandler(urlpath, OnWebRequest, urlpath, "https://github.com/neko-pm/simple-fastdownload"))
+	if (!Web_RegisterRequestHandler(urlpath, OnWebRequest, urlpath, "simple-fastdownload-redux"))
 	{
 		SetFailState("Failed to register request handler.");
 	}
@@ -123,6 +123,14 @@ public void OnPluginEnd()
 
 public void OnConfigsExecuted()
 {
+	if (sv_downloadurl_autoupdate.BoolValue)
+	{
+		char hostname[PLATFORM_MAX_PATH];
+		sv_downloadurl_hostname.GetString(hostname, sizeof(hostname));
+
+		SetFastDownloadUrl(hostname);
+	}
+
 	if (!files_added || sv_downloadurl_autoreload.BoolValue)
 	{
 		files_added = false;
@@ -428,7 +436,9 @@ enum CompressorState
 }
 
 ArrayStack compressor_queue;
-int compressor_count;
+int compressor_active;
+int compressor_remaining;
+int compressor_errors;
 int compressor_max_concurrent;
 CompressorState compressor_state;
 
@@ -446,16 +456,19 @@ methodmap Compressor
 		entry.path_dest = path_dest;
 		entry.filepath = filepath;
 		compressor_queue.PushArray(entry);
+		compressor_remaining++;
 	}
 
 	public static void ClearQueue()
 	{
 		compressor_queue.Clear();
+		compressor_remaining = 0;
+		compressor_errors = 0;
 	}
 	
 	public static void Start(bool waitUntilOngoingFinish = false)
 	{
-		if (waitUntilOngoingFinish && compressor_count)
+		if (waitUntilOngoingFinish && compressor_active)
 		{
 			compressor_state = COMPRESSOR_RESTARTING;
 		}
@@ -480,33 +493,42 @@ methodmap Compressor
 	{
 		while (!compressor_queue.Empty)
 		{
-			if (compressor_count >= compressor_max_concurrent)
+			if (compressor_active >= compressor_max_concurrent)
 				return;
 			
 			char filepath[PLATFORM_MAX_PATH], archive[PLATFORM_MAX_PATH];
 			CompressorQueueEntry entry;
 			compressor_queue.PopArray(entry);
+			compressor_remaining--;
 			FormatEx(filepath, sizeof(filepath), "%s%s", entry.path_source, entry.filepath);
 			FormatEx(archive, sizeof(archive), "%s%s.bz2", entry.path_dest, entry.filepath);
 
 			DataPack data = new DataPack();
 			if (System2_Compress(CompressCallback, filepath, archive, ARCHIVE_BZIP2, LEVEL_9, data))
 			{
-				if (log_general) LogMessage("Compressing archive: \"%s\"", archive);
+				if (log_general) LogMessage("Compressing archive: \"%s\" (%d remaining)", archive, compressor_remaining);
 				FormatEx(archive, sizeof(archive), "%s.bz2", entry.filepath);
 				data.WriteString(entry.path_dest);
 				data.WriteString(archive);
-				compressor_count++;
+				compressor_active++;
 			}
 			else
 			{
 				delete data;
 				LogError("Compressing archive failed - check System2 extension: \"%s\"", archive);
+				compressor_errors++;
 			}
 		}
-		if (!compressor_count)
+		if (!compressor_active)
 		{
-			if (log_general) LogMessage("All whitelisted downloads are compressed.");
+			if (log_general)
+			{
+				if (compressor_errors)
+					LogMessage("BZ2 Compressor completed with %d errors.", compressor_errors);
+				else
+					LogMessage("BZ2 Compressor completed successfully.");
+			}
+			compressor_errors = 0;
 		}
 	}
 }
@@ -516,6 +538,7 @@ void CompressCallback(bool success, const char[] command, System2ExecuteOutput o
 	if (!success || output.ExitStatus)
 	{
 		LogError("Compressing archive failed (%s)", command);
+		compressor_errors++;
 	}
 	else
 	{
@@ -531,13 +554,13 @@ void CompressCallback(bool success, const char[] command, System2ExecuteOutput o
 		}
 	}
 	delete data;
-	compressor_count--;
+	compressor_active--;
 	
 	if (compressor_state == COMPRESSOR_RUNNING)
 	{
 		Compressor.CompressFiles();
 	}
-	else if (compressor_state == COMPRESSOR_RESTARTING && !compressor_count)
+	else if (compressor_state == COMPRESSOR_RESTARTING && !compressor_active)
 	{
 		compressor_state = COMPRESSOR_RUNNING;
 		Compressor.CompressFiles();
