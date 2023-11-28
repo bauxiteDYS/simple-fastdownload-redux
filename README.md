@@ -2,20 +2,27 @@
 
 Provides fastdownload support for srcds without the need for webhosting. By default, it will automatically change the value of `sv_downloadurl` and serve files that are either in the downloadables stringtable or the mapcycle.
 
-By default, if `System2` extension is installed, this will also automatically compress missing .bz2 archives to speed up the downloads further.
-If `sv_downloadurl_bz2folder` is not empty, such folder will be added as a search path for bz2 files, as well as used by the compressor.
-Otherwise, the compressed files are placed in same folder as the source file.
+- For usage on a local server, you should be all set.
+- For usage on a live server, edit sv_downloadurl_hostname to match your server ip or hostname.
 
+> While there are some ways to automatically recognize the host, none of them prove to be as reliable as setting it manually.
+#
+### Good to know
 Files are preprocessed (added to whitelist and compressed) on every mapchange. If you don't change downloads at runtime, you can save some time by setting `sv_downloadurl_autoreload` to 0.
 
 Files inside the custom folder are fully supported.
 
-Configuration file is automatically created at cfg\sourcemod\plugin.simple-fastdownload.cfg.
-
+Configuration file is automatically created at cfg\sourcemod\plugin.simple-fastdownload-redux.cfg.
+#
+### Compressor
+By default, if `System2` extension is installed, this will also automatically compress missing .bz2 archives to speed up the downloads further.
+If `sv_downloadurl_bz2folder` is not empty, such folder will be added as a search path for bz2 files, as well as used by the compressor.
+Otherwise, the compressed files are placed in same folder as the source file.
+#
 ### Dependencies
 * [Conplex & Webcon](https://forums.alliedmods.net/showthread.php?t=270962)
 * [(Optional) System2](https://forums.alliedmods.net/showthread.php?t=146019)
-
+#
 ### ConVars
 ConVar | Default Value | Description 
 ------ | ------- | --------- 
