@@ -1,0 +1,44 @@
+name: CI
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+              
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup sourcemod compiler
+        id: setup-sp
+        uses: rumblefrog/setup-sp@master
+        with:
+          version: '1.12.7031'
+
+      - name: Compile plugins
+        run: |
+          mkdir -p plugins
+          for file in scripting/*.sp
+          do
+            plugin="$(basename "${file%.*}")"
+            echo -e "\nCompiling $plugin\n"
+            spcomp -v2 -i scripting/include -o plugins/"$plugin" "$file"
+          done
+
+      - name: Create package
+        run: |
+          OUT="/tmp/build"
+          SM="${OUT}/addons/sourcemod"
+          mkdir -p $SM
+          cp -R plugins $SM
+          cp -R scripting $SM
+      
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sfdlr-${{ github.run_number }}
+          path: /tmp/build/
