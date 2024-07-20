@@ -2,17 +2,21 @@
 
 Provides fastdownload support for srcds without the need for webhosting. By default, it will automatically change the value of `sv_downloadurl` and serve files that are either in the downloadables stringtable or the mapcycle.
 
-- For usage on a local server, you should be all set.
-- For usage on a live server, edit sv_downloadurl_hostname to match your server ip or hostname.
+- For usage on a local server, you should be all set.  
+If you have already specified a local ip in launch parameters, then you may need to set `sv_downloadurl_hostname` to `localhost`.
+- For usage on a live server, edit `sv_downloadurl_hostname` to match your server's public ip or hostname, or use `+ip x.x.x.x` launch paramer.
+- It's recommended to also use `-strictportbind` launch parameter. Otherwise the hostport convar used to construct the url may turn incorrect.
 
-> While there are some ways to automatically recognize the host, none of them prove to be as reliable as setting it manually.
+
+> If all of above fails, disable auto-setting the url with `sv_downloadurl_autoupdate 0` and add it manually in server.cfg: `sv_downloadurl http://<hostname>:<serverport>/fastdl`.
 #
 ### Good to know
+Configuration file is automatically created at **cfg\sourcemod\plugin.simple-fastdownload-redux.cfg**.
+
 Files are preprocessed (added to whitelist and compressed) on every mapchange. If you don't change downloads at runtime, you can save some time by setting `sv_downloadurl_autoreload` to 0.
 
 Files inside the custom folder are fully supported.
 
-Configuration file is automatically created at cfg\sourcemod\plugin.simple-fastdownload-redux.cfg.
 #
 ### Compressor
 By default, if `System2` extension is installed, this will also automatically compress missing .bz2 archives to speed up the downloads further.
