@@ -626,26 +626,29 @@ public bool OnWebRequest(WebConnection connection, const char[] method, const ch
 void SetFastDownloadUrl(const char[] hostname)
 {
 	char fastdownload_url[PLATFORM_MAX_PATH];
+	int port = FindConVar("hostport").IntValue;
 	
-	if (hostname[0] == '\0')
+	if (hostname[0] == EOS)
 	{
 		int hostip = FindConVar("hostip").IntValue;
-		FormatEx(fastdownload_url, sizeof(fastdownload_url), "http://%d.%d.%d.%d:%d/%s",
-			(hostip >> 24) & 0xFF,
-			(hostip >> 16) & 0xFF,
-			(hostip >> 8 ) & 0xFF,
-			hostip         & 0xFF,
-			FindConVar("hostport").IntValue,
-			urlpath
-		);
+		if (hostip)
+		{
+			FormatEx(fastdownload_url, sizeof(fastdownload_url), "http://%d.%d.%d.%d:%d/%s",
+				(hostip >> 24) & 0xFF,
+				(hostip >> 16) & 0xFF,
+				(hostip >> 8 ) & 0xFF,
+				hostip         & 0xFF,
+				port, urlpath
+			);
+		}
+		else
+		{
+			FormatEx(fastdownload_url, sizeof(fastdownload_url), "http://localhost:%d/%s", port, urlpath);
+		}
 	}
 	else
 	{
-		FormatEx(fastdownload_url, sizeof(fastdownload_url), "http://%s:%d/%s",
-			hostname,
-			FindConVar("hostport").IntValue,
-			urlpath
-		);
+		FormatEx(fastdownload_url, sizeof(fastdownload_url), "http://%s:%d/%s", hostname, port, urlpath);
 	}
 	
 	sv_downloadurl.SetString(fastdownload_url, true, false);
