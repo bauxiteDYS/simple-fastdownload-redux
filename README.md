@@ -1,3 +1,5 @@
+[![CI](https://github.com/Alienmario/simple-fastdownload-redux/actions/workflows/plugin.yml/badge.svg)](https://github.com/Alienmario/simple-fastdownload-redux/actions/workflows/plugin.yml)
+
 # simple-fastdownload
 
 Provides fastdownload support for srcds without the need for webhosting. By default, it will automatically change the value of `sv_downloadurl` and serve files that are either in the downloadables stringtable or the mapcycle.
