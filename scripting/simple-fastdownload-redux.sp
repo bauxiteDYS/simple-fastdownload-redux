@@ -14,7 +14,7 @@ public Plugin myinfo =
 	name = "simple-fastdownload-redux",
 	author = "domino_, Alienmario",
 	description = "Fastdownload support without webhosting",
-	version = "2.0.0",
+	version = "2.0.1",
 	url = "https://github.com/Alienmario/simple-fastdownload-redux"
 };
 
@@ -177,13 +177,14 @@ public void OnClientConnected(int client)
 
 // fallback used to whitelist files when no clients are connected,
 // but after plugins have had a chance to add their files to downloadables
-public void Timer_AddFilesFallback(Handle timer)
+public Action Timer_AddFilesFallback(Handle timer)
 {
 	if (!files_added)
 	{
 		AddFilesToFileList();
 		files_added = true;
 	}
+	return Plugin_Stop;
 }
 
 //------------------------------------------------------
